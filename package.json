@@ -1,0 +1,21 @@
+{
+  "name": "fieldkit",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI-assisted, human-reviewed customer data onboarding toolkit for Forward Deployed Engineers.",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @fieldkit/web dev",
+    "build": "pnpm -r build",
+    "test": "pnpm --filter @fieldkit/core test",
+    "typecheck": "pnpm -r typecheck",
+    "cli": "pnpm --filter @fieldkit/cli exec tsx src/index.ts",
+    "demo": "pnpm cli run --source ../../examples/acme_legacy_contacts.csv --target contact --dry-run"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
+  }
+}

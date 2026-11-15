@@ -1,0 +1,22 @@
+Cust ID,Full Name,E-mail Address,Tel,Organisation,Status,ACV ($),Date Added,Notes
+AC-1001,Jane Doe,Jane.Doe@Initech.com ,(415) 555-0101,Initech,Active Customer,"$12,500",03/14/2021,renewal in Q3
+AC-1002,"Patel, Arjun",arjun.patel@globex.io,+44 20 7946 0958,Globex,Trial,15k,2022-01-09,
+AC-1003,Maria Garcia,maria@umbrella.co,415.555.0199,Umbrella Corp,Lead,,Mar 3 2023,met at conf
+AC-1004,Wei Chen,wei.chen@hooli.com,4155550142,Hooli,Active Customer,"48,000",11/02/2020,
+AC-1005,Olu Adebayo,olu@piedpiper.com,(650) 555-0177 x204,Pied Piper,Cancelled,"$9,900",07/30/2019,churned - pricing
+AC-1006,Sofia Rossi,SOFIA.ROSSI@VANDELAY.COM,212-555-0164,Vandelay Industries,Opportunity,22000,2023-06-18,
+AC-1007,Kenji Watanabe,kenji@soylent,+81 3-1234-5678,Soylent,Lead,,05/05/2024,email bounced
+AC-1008,Priya Nair,priya.nair@stark.in,+91 98765 43210,Stark Industries,Active Customer,"$120,000",2018-09-01,strategic
+AC-1009,Liam O'Brien,liam@wayne.ent,312 555 0110,Wayne Enterprises,Inbound,,10/12/2024,
+AC-1010,Ana Souza,ana.souza@cyberdyne.ai,(415) 555-0123,Cyberdyne,Trial,8.5k,2024-02-29,
+AC-1011,Jane Doe,jane.doe@initech.com,(415) 555-0101,Initech,Active Customer,"$12,500",03/14/2021,dupe of 1001?
+AC-1012,Tom Becker,tom.becker@massive.dyn,646-555-0188,Massive Dynamic,Lost,"$3,000",01/15/2020,
+AC-1001,Jane Doe,jane.doe@initech.com,(415) 555-0101,Initech,Active Customer,"$12,500",03/14/2021,exported twice
+AC-1013,Fatima Zahra,fatima@oscorp.com,,Oscorp,Paying,"$64,000",2021-12-01,
+AC-1014,Diego Hernández,diego@tyrell.mx,+52 55 1234 5678,Tyrell Corp,Inactive,"$5,500",06/06/2019,
+AC-1015,Grace Kim,grace.kim@aperture.sci,(206) 555-0145,Aperture Science,SQL,"31,000",2024-08-20,
+AC-1016,Noah Williams,noah@gringotts.uk,+44 161 496 0000,Gringotts,Active Customer,"$18,250",09/09/2022,
+AC-1017,Chloé Martin,chloe.martin@nakatomi.fr,+33 1 23 45 67 89,Nakatomi,,,"Apr 22, 2024",status missing in legacy CRM
+AC-1018,Ravi Shankar,ravi@weyland.com,415-555-0133,Weyland-Yutani,Won,"$250,000",2017-03-03,
+AC-1019,Emma Johansson,emma.j@monarch.se,+46 8 123 456 78,Monarch,MQL,,11/30/2024,
+AC-1020,,unknown@acme-import.local,,Acme,Lead,,2024-10-01,no name captured

@@ -1,0 +1,24 @@
+name: ci
+on:
+  push: { branches: [main] }
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm --filter @fieldkit/web build
+      - name: CLI smoke test (approval gate must block an unapproved run)
+        working-directory: packages/cli
+        run: |
+          npx tsx src/index.ts suggest --source ../../examples/acme_legacy_contacts.csv --out /tmp/m.json
+          ! npx tsx src/index.ts run --source ../../examples/acme_legacy_contacts.csv --mapping /tmp/m.json
+          npx tsx src/index.ts approve --mapping /tmp/m.json --all
+          npx tsx src/index.ts run --source ../../examples/acme_legacy_contacts.csv --mapping /tmp/m.json --out /tmp/out.jsonl
+          test "$(wc -l < /tmp/out.jsonl)" -eq 17
