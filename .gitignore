@@ -6,3 +6,5 @@ dist
 .env.local
 .fieldkit/
 coverage
+apps/web/lib/sample.generated.ts
+*.tsbuildinfo

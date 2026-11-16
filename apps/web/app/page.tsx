@@ -4,11 +4,19 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AuditEvent, FieldMapping, MappingSpec, RunReport, SourceProfile, Transform } from "@fieldkit/core";
 
 type TargetFieldInfo = { name: string; description: string; required: boolean; type: string };
-type SuggestResponse = { profile: SourceProfile; spec: MappingSpec; engine: "llm" | "heuristic"; fallbackReason?: string; targetFields: TargetFieldInfo[] };
+type SuggestResponse = {
+  profile: SourceProfile; spec: MappingSpec; engine: "llm" | "heuristic"; fallbackReason?: string; targetFields: TargetFieldInfo[];
+  keySource: "none" | "hosted" | "byok"; cached: boolean; quota?: { remainingToday: number };
+};
+type DeployConfig = {
+  demoMode: boolean; hostedAi: boolean; hostedSampleOnly: boolean; remainingToday: number | null;
+  perVisitorDaily: number | null; maxCsvMb: number; auditIsEphemeral: boolean;
+};
+type Engine = "offline" | "hosted" | "byok";
 type AuditResponse = { integrity: { ok: boolean; brokenAt?: number }; events: AuditEvent[] };
 
-async function api<T>(path: string, body?: unknown): Promise<T> {
-  const res = await fetch(path, body === undefined ? undefined : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+async function api<T>(path: string, body?: unknown, headers: Record<string, string> = {}): Promise<T> {
+  const res = await fetch(path, body === undefined ? undefined : { method: "POST", headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? `Request failed (${res.status})`);
   return data as T;
@@ -37,25 +45,42 @@ export default function Workbench() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [over, setOver] = useState(false);
+  const [deploy, setDeploy] = useState<DeployConfig | null>(null);
+  const [engine, setEngine] = useState<Engine>("offline");
+  // The visitor's key lives only in React state: never persisted, sent only as a request header.
+  const [byokKey, setByokKey] = useState("");
 
   const refreshAudit = useCallback(() => api<AuditResponse>("/api/audit").then(setAudit).catch(() => {}), []);
+  const refreshConfig = useCallback(() => api<DeployConfig>("/api/config").then(setDeploy).catch(() => {}), []);
   useEffect(() => { refreshAudit(); }, [refreshAudit]);
+  useEffect(() => {
+    api<DeployConfig>("/api/config").then((c) => { setDeploy(c); if (c.hostedAi) setEngine("hosted"); }).catch(() => {});
+  }, []);
 
   const run = async <T,>(label: string, fn: () => Promise<T>) => {
     setBusy(label); setError(null);
     try { return await fn(); }
     catch (e) { setError((e as Error).message); }
-    finally { setBusy(null); refreshAudit(); }
+    finally { setBusy(null); refreshAudit(); refreshConfig(); }
   };
 
   const ingest = (text: string, name: string) =>
     run("Profiling & suggesting mappings…", async () => {
       setCsv(text); setFileName(name); setReport(null);
-      const r = await api<SuggestResponse>("/api/suggest", { csv: text, target: "contact", shareSamples });
+      const useByok = engine === "byok" && byokKey.trim() !== "";
+      const r = await api<SuggestResponse>(
+        "/api/suggest",
+        { csv: text, target: "contact", shareSamples, useLlm: engine !== "offline" },
+        useByok ? { "x-anthropic-key": byokKey.trim() } : {},
+      );
       setSuggest(r); setSpec(r.spec);
     });
 
-  const onFile = async (f: File | undefined) => f && ingest(await f.text(), f.name);
+  const onFile = async (f: File | undefined) => {
+    if (!f) return;
+    if (engine === "byok" && !byokKey.trim()) return setError("Paste your API key first, or pick another engine.");
+    await ingest(await f.text(), f.name);
+  };
   const loadSample = () => run("Loading sample…", async () => {
     const text = await (await fetch("/api/sample")).text();
     await ingest(text, "acme_legacy_contacts.csv");
@@ -96,8 +121,20 @@ export default function Workbench() {
         <h1>field<span>kit</span></h1>
         <p>Onboard a customer&apos;s messy export in minutes, not sprints. AI proposes · humans approve · schemas enforce.</p>
         <div className="spacer" />
-        {suggest && <span className={`badge ${suggest.engine === "llm" ? "ok" : "warn"}`}>engine: {suggest.engine}</span>}
+        {suggest && (
+          <span className={`badge ${suggest.engine === "llm" ? "ok" : "warn"}`}>
+            engine: {suggest.engine}{suggest.keySource !== "none" ? ` · ${suggest.keySource === "byok" ? "your key" : "hosted key"}` : ""}{suggest.cached ? " · cached" : ""}
+          </span>
+        )}
       </header>
+
+      {deploy?.demoMode && (
+        <div className="demo-banner">
+          <b>Public demo.</b> Files are processed in memory and never stored. Hosted AI is rate-limited
+          {deploy.hostedSampleOnly ? " and runs on the sample dataset only" : ""}; bring your own key to map your own files with AI.
+          {deploy.auditIsEphemeral ? " The audit trail resets when the server recycles." : ""}
+        </div>
+      )}
 
       <main>
         {error && <div className="err" style={{ marginBottom: 18 }}>{error}</div>}
@@ -115,8 +152,36 @@ export default function Workbench() {
             <input type="file" accept=".csv,text/csv" hidden onChange={(e) => onFile(e.target.files?.[0])} />
             {fileName ? <><strong>{fileName}</strong> · {suggest?.profile.recordCount ?? "…"} records · {columns.length} columns</> : <>Drop a CSV here or <strong>click to choose</strong></>}
           </label>
+          <fieldset className="engines">
+            <legend>Mapping engine</legend>
+            <label className={engine === "offline" ? "on" : ""}>
+              <input type="radio" name="engine" checked={engine === "offline"} onChange={() => setEngine("offline")} />
+              <b>Offline heuristic</b><span>Free, no network access. Works air-gapped.</span>
+            </label>
+            <label className={engine === "hosted" ? "on" : ""} title={deploy?.hostedAi ? "" : "No hosted key on this deployment"}>
+              <input type="radio" name="engine" disabled={!deploy?.hostedAi} checked={engine === "hosted"} onChange={() => setEngine("hosted")} />
+              <b>AI · hosted demo key</b>
+              <span>
+                {!deploy?.hostedAi ? "Not configured on this deployment"
+                  : deploy.demoMode ? `${deploy.hostedSampleOnly ? "Sample only · " : ""}${deploy.remainingToday ?? 0}/${deploy.perVisitorDaily} runs left today (cached repeats are free)`
+                  : "Uses the server's key"}
+              </span>
+            </label>
+            <label className={engine === "byok" ? "on" : ""}>
+              <input type="radio" name="engine" checked={engine === "byok"} onChange={() => setEngine("byok")} />
+              <b>AI · your own key</b><span>Any file. Billed to you. Never stored or logged.</span>
+            </label>
+          </fieldset>
+          {engine === "byok" && (
+            <div className="row" style={{ marginBottom: 12 }}>
+              <input type="password" className="key" placeholder="sk-ant-…" autoComplete="off" spellCheck={false}
+                value={byokKey} onChange={(e) => setByokKey(e.target.value)} aria-label="Your Anthropic API key" />
+              <span className="desc">Sent only as a request header for each AI run. Kept in this tab&apos;s memory, cleared when you close it.</span>
+            </div>
+          )}
           <div className="row" style={{ marginTop: 12 }}>
             <button className="btn" onClick={loadSample} disabled={!!busy}>Load sample: Acme legacy CRM export</button>
+            {csv && <button className="btn" onClick={() => ingest(csv, fileName)} disabled={!!busy || (engine === "byok" && !byokKey.trim())}>Re-run suggestions</button>}
             <label className="row" style={{ gap: 6, color: "var(--muted)" }}>
               <input type="checkbox" checked={shareSamples} onChange={(e) => setShareSamples(e.target.checked)} />
               Share raw sample values with the LLM <span className="desc">(off = masked shapes only, e.g. a***@a***.com)</span>
@@ -249,7 +314,7 @@ export default function Workbench() {
             <div className="spacer" />
             {audit && <span className={`badge ${audit.integrity.ok ? "ok" : "bad"}`}>{audit.integrity.ok ? "✔ chain intact" : `✘ broken at #${audit.integrity.brokenAt}`}</span>}
           </div>
-          <p className="sub">Append-only, SHA-256 hash-chained. Answers &ldquo;who approved this mapping, and when?&rdquo;</p>
+          <p className="sub">Append-only, SHA-256 hash-chained. Answers &ldquo;who approved this mapping, and when?&rdquo;{deploy?.auditIsEphemeral && <> <span className="note">Demo host: stored in /tmp, resets when the server recycles.</span></>}</p>
           {audit?.events.length ? audit.events.map((e) => (
             <div className="event" key={e.seq}>
               <div><span className="a">{e.action}</span> <span className="t">#{e.seq} · {e.actor} · {new Date(e.ts).toLocaleTimeString()}</span></div>

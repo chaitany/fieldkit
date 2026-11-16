@@ -80,3 +80,14 @@ aside .event { border-left: 2px solid var(--line); padding: 2px 0 10px 12px; }
 aside .event .a { font-weight: 600; }
 aside .event .t { color: var(--muted); font-size: 12px; }
 aside .event code { color: var(--muted); }
+
+.demo-banner { grid-column: 1 / -1; background: #1a1f14; border: 1px solid #3b4a24; color: #cfe3a8; border-radius: 8px; padding: 10px 14px; font-size: 13px; }
+.engines { border: none; padding: 0; margin: 14px 0 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.engines legend { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+.engines label { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; cursor: pointer; }
+.engines label.on { border-color: var(--accent); }
+.engines label:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
+.engines input { grid-row: span 2; margin-top: 3px; accent-color: var(--accent); }
+.engines span { color: var(--muted); font-size: 12px; }
+@media (max-width: 800px) { .engines { grid-template-columns: 1fr; } }
+input.key { font-family: var(--mono); font-size: 12.5px; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; width: 340px; }

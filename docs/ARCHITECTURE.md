@@ -38,6 +38,7 @@ flowchart LR
 | LLM output → mapping | zod schema validation; hallucinated columns rejected per field; transforms are limited to the closed DSL. |
 | Mapping → real run | Every required field must be human-approved; the source fingerprint must match. |
 | Record → output | The target zod schema validates every row. Invalid rows are reported, never coerced. |
+| Public internet → hosted API key | Demo mode: sample-only hosted AI, result cache, per-visitor/global quotas, BYOK, workspace spend cap ([ADR-0005](adr/0005-public-demo-cost-controls.md)). |
 
 ## Extension points
 

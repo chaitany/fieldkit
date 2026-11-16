@@ -30,6 +30,11 @@ Point at the audit trail. "Every suggest, approve and run is hash-chained, so I 
 with a renamed column: "If the customer renames a column next month, the run refuses to start
 instead of silently dropping data."
 
+**Bonus, if they ask "how do you stop someone burning your API key?" (30s)**
+Point at the engine picker: "Hosted AI is limited to the sample and cached, there are per-visitor and global quotas,
+and anyone who wants AI on their own data brings their own key, which is never stored. The real ceiling is a spend
+cap on a dedicated workspace. Defence in depth: each layer assumes the one before it failed." (ADR-0005)
+
 **3:45 – Close (15s)**
 "The same engine runs as a CLI inside the customer's VPC. The LLM proposes, the human approves, the
 schema enforces. The ADRs explain each tradeoff."

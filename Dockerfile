@@ -7,7 +7,7 @@ COPY packages ./packages
 COPY apps ./apps
 COPY examples ./examples
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @fieldkit/core test && pnpm --filter @fieldkit/web build
+RUN pnpm -r test && pnpm --filter @fieldkit/web build
 
 FROM node:22-alpine
 WORKDIR /app

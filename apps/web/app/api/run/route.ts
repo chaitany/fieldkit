@@ -1,6 +1,6 @@
 import { MappingSpecSchema, runPipeline } from "@fieldkit/core";
 import { z } from "zod";
-import { actorFrom, audit, handle, loadCsv, target } from "@/lib/server";
+import { actorFrom, audit, guard, handle, loadCsv, target } from "@/lib/server";
 
 export const runtime = "nodejs";
 
@@ -8,6 +8,7 @@ const Body = z.object({ csv: z.string(), spec: MappingSpecSchema, dryRun: z.bool
 
 export function POST(req: Request) {
   return handle(async () => {
+    guard(req);
     const body = Body.parse(await req.json());
     const records = await loadCsv(body.csv);
     const report = runPipeline(records, body.spec, target(body.spec.target), { dryRun: body.dryRun, previewSize: 8 });

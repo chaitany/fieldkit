@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "pnpm --filter @fieldkit/web dev",
     "build": "pnpm -r build",
-    "test": "pnpm --filter @fieldkit/core test",
+    "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "cli": "pnpm --filter @fieldkit/cli exec tsx src/index.ts",
     "demo": "pnpm cli run --source ../../examples/acme_legacy_contacts.csv --target contact --dry-run"

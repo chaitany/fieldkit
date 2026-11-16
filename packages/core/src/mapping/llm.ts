@@ -6,6 +6,8 @@ import { suggestHeuristic } from "./heuristic";
 export interface LlmOptions {
   apiKey?: string;
   model?: string;
+  /** Override for corporate LLM gateways/proxies (customers often require one). Defaults to $ANTHROPIC_BASE_URL. */
+  baseUrl?: string;
   /** Send real sample values to the model. Off by default: only column names + masked shapes leave the box. */
   shareSamples?: boolean;
   fetchImpl?: typeof fetch;
@@ -84,7 +86,8 @@ export async function suggestMappings(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 30_000);
   try {
-    const res = await (opts.fetchImpl ?? fetch)("https://api.anthropic.com/v1/messages", {
+    const baseUrl = (opts.baseUrl ?? process.env.ANTHROPIC_BASE_URL ?? "https://api.anthropic.com").replace(/\/+$/, "");
+    const res = await (opts.fetchImpl ?? fetch)(`${baseUrl}/v1/messages`, {
       method: "POST",
       signal: controller.signal,
       headers: {

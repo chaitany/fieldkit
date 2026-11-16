@@ -35,7 +35,7 @@ runs the same engine headless inside the customer's VPC, on-prem, or air-gapped.
 
 ```bash
 pnpm install
-pnpm test                 # 17 tests: transforms, inference, mapping, guardrails, pipeline, audit
+pnpm test                 # 29 tests: engine (transforms, mapping, guardrails, pipeline, audit) + demo-mode policy
 pnpm dev                  # http://localhost:3000 → "Load sample"
 ```
 
@@ -56,6 +56,34 @@ LLM-assisted mapping is optional: `export ANTHROPIC_API_KEY=...`. Without a key,
 deterministic heuristic mapper and **says so in the UI**. It never falls back silently.
 
 Docker: `docker build -t fieldkit . && docker run -p 3000:3000 fieldkit`
+
+## Deploy a public demo (safely)
+
+The live demo must not become an open wallet for your API key. **Demo mode** (`FIELDKIT_DEMO_MODE=1`)
+gives visitors three engines and bounds what the hosted key can spend:
+
+![Demo mode engine picker](docs/demo-mode.png)
+
+- **Offline heuristic:** free, the default when no key is set.
+- **AI · hosted demo key:** runs on the built-in sample only, cached for 24h, with per-visitor and global daily quotas.
+- **AI · your own key:** visitors map *their* files and pay for it themselves. The key is held in tab memory only and never stored or logged.
+
+Details and tradeoffs: [ADR-0005](docs/adr/0005-public-demo-cost-controls.md).
+
+### Vercel (recommended: no cold starts)
+
+1. Import the repo → set **Root Directory** to `apps/web` (framework: Next.js; pnpm is auto-detected).
+2. Environment variables: `FIELDKIT_DEMO_MODE=1`, `FIELDKIT_VISITOR_SALT=<random>`, and optionally
+   `ANTHROPIC_API_KEY` (see step 3). The full list is in [`.env.example`](.env.example).
+3. **Before adding a key:** create a dedicated workspace in the Anthropic Console, give it a low monthly
+   spend limit (for example $5) with an alert, and create the key *in that workspace*. This is the hard ceiling if everything else fails.
+4. Deploy. The audit log automatically uses `/tmp` on Vercel, which resets when instances recycle (the UI says so).
+
+### Render / Fly / any container host
+
+`docker build` uses the included Dockerfile. Mount a volume at `/data` to keep the audit log. On Render's
+free tier the service sleeps after 15 idle minutes and takes about a minute to wake, which hurts the first
+impression for a recruiter clicking your link. Use a paid instance if you go this way.
 
 ## Engineering decisions worth discussing
 
