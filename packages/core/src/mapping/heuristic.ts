@@ -133,7 +133,7 @@ export function suggestHeuristic(profile: SourceProfile, target: TargetSchema, t
       source: c.source.name,
       transforms: defaultTransforms(c.target, c.source),
       confidence: Number(c.score.toFixed(2)),
-      rationale: `name match ${(c.n * 100).toFixed(0)}%, type ${c.source.inferredType}→${c.target.type} ${(c.t * 100).toFixed(0)}%`,
+      rationale: `The column name is a ${(c.n * 100).toFixed(0)}% match for ${c.target.name}, and its values look like ${c.source.inferredType === c.target.type ? `${c.target.type}, as expected` : `${c.source.inferredType} rather than ${c.target.type}, so cleanup is applied`}.`,
       suggestedBy: "heuristic",
       approved: false,
     });
@@ -150,7 +150,7 @@ export function suggestHeuristic(profile: SourceProfile, target: TargetSchema, t
           source: fullName.name,
           transforms: [{ op: "trim" }, { op: "splitName", part }],
           confidence: 0.7,
-          rationale: `"${fullName.name}" looks like a full name; split to ${part} name`,
+          rationale: `"${fullName.name}" holds full names, so it is split to get the ${part} name. Check a few rows with middle names.`,
           suggestedBy: "heuristic",
           approved: false,
         });
@@ -165,7 +165,7 @@ export function suggestHeuristic(profile: SourceProfile, target: TargetSchema, t
         source: null,
         transforms: [],
         confidence: 0,
-        rationale: "no confident match — needs human input",
+        rationale: "No column was a confident match. Pick a source column or leave it empty.",
         suggestedBy: "heuristic",
         approved: false,
       },

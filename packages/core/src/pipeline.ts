@@ -88,7 +88,7 @@ export function runPipeline(records: RawRecord[], spec: MappingSpec, target: Tar
     const k = (result.data as Record<string, unknown>)[key];
     if (k !== undefined && seen.has(k)) {
       invalid++;
-      errors.push({ row, field: key, message: `duplicate ${key} within this run`, value: k });
+      errors.push({ row, field: key, message: `Duplicate ${key} in this file`, value: k });
       errorsByField[key] = (errorsByField[key] ?? 0) + 1;
       return;
     }

@@ -3,7 +3,12 @@
 **Onboard a customer's messy data export in an afternoon, not a sprint.**
 AI proposes the mapping · a human approves it · the schema enforces it · every step is audited.
 
-![Fieldkit workbench](docs/screenshot.png)
+![Fieldkit mapping canvas: customer columns wired to schema fields, colored by confidence](docs/screenshot.png)
+
+<details><summary>Dry-run results with a copyable fix list for the customer</summary>
+
+![Dry run results](docs/results.png)
+</details>
 
 ---
 
@@ -36,7 +41,7 @@ runs the same engine headless inside the customer's VPC, on-prem, or air-gapped.
 ```bash
 pnpm install
 pnpm test                 # 29 tests: engine (transforms, mapping, guardrails, pipeline, audit) + demo-mode policy
-pnpm dev                  # http://localhost:3000 → "Load sample"
+pnpm dev                  # http://localhost:3000, then "Load the sample export"
 ```
 
 CLI walkthrough:

@@ -32,7 +32,8 @@ export function POST(req: Request) {
     let cached = false;
 
     if (decision.kind === "heuristic") {
-      result = { fields: suggestHeuristic(profile, t), engine: "heuristic", fallbackReason: decision.reason };
+      // Choosing offline is not a fallback, so there is nothing to explain.
+      result = { fields: suggestHeuristic(profile, t), engine: "heuristic", ...(body.useLlm ? { fallbackReason: decision.reason } : {}) };
     } else if (decision.kind === "byok") {
       keySource = "byok";
       result = await suggestMappings(profile, t, { apiKey: decision.apiKey, shareSamples: body.shareSamples });
