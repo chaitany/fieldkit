@@ -12,6 +12,17 @@ describe("loadConfig", () => {
     const c = loadConfig({ FIELDKIT_DEMO_MODE: "1", FIELDKIT_AI_GLOBAL_DAILY: "20" });
     expect(c).toMatchObject({ demoMode: true, globalDaily: 20, requestsPerMinute: 30, maxCsvBytes: 2 * 1024 * 1024 });
   });
+
+  it("ignores the owner's key in demo mode, even if it is set by mistake", () => {
+    const c = loadConfig({ FIELDKIT_DEMO_MODE: "1", ANTHROPIC_API_KEY: "owner-key" });
+    expect(c.hostedKey).toBeUndefined();
+    expect(c.hostedKeyIgnored).toBe(true);
+    expect(decideEngine({ config: c, wantsLlm: true, isSample: true }).kind).toBe("heuristic");
+  });
+
+  it("uses the server key for local/private deployments", () => {
+    expect(loadConfig({ ANTHROPIC_API_KEY: "k" }).hostedKey).toBe("k");
+  });
 });
 
 describe("FixedWindowLimiter", () => {
@@ -49,7 +60,8 @@ describe("TtlCache", () => {
 });
 
 describe("decideEngine", () => {
-  const demo = loadConfig({ FIELDKIT_DEMO_MODE: "1", ANTHROPIC_API_KEY: "host-key" });
+  // Explicit opt-in (FIELDKIT_ALLOW_HOSTED_AI) is required for the hosted path in demo mode.
+  const demo = loadConfig({ FIELDKIT_DEMO_MODE: "1", FIELDKIT_ALLOW_HOSTED_AI: "1", ANTHROPIC_API_KEY: "host-key" });
 
   it("never spends anything when the visitor picks offline", () => {
     expect(decideEngine({ config: demo, wantsLlm: false, isSample: true }).kind).toBe("heuristic");

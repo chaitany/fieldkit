@@ -52,32 +52,30 @@ fieldkit run     --source ../../examples/acme_legacy_contacts.csv --mapping mapp
 fieldkit audit verify
 ```
 
-LLM-assisted mapping is optional: `export ANTHROPIC_API_KEY=...`. Without a key, Fieldkit uses the
+LLM-assisted mapping is optional: `export ANTHROPIC_API_KEY=...` for local or private runs (it's ignored in public demo mode). Without a key, Fieldkit uses the
 deterministic heuristic mapper and **says so in the UI**. It never falls back silently.
 
 Docker: `docker build -t fieldkit . && docker run -p 3000:3000 fieldkit`
 
 ## Deploy a public demo (safely)
 
-The live demo must not become an open wallet for your API key. **Demo mode** (`FIELDKIT_DEMO_MODE=1`)
-gives visitors three engines and bounds what the hosted key can spend:
+The public demo never spends the owner's API key. In **demo mode** (`FIELDKIT_DEMO_MODE=1`) visitors get two engines:
 
 ![Demo mode engine picker](docs/demo-mode.png)
 
-- **Offline heuristic:** free, the default when no key is set.
-- **AI · hosted demo key:** runs on the built-in sample only, cached for 24h, with per-visitor and global daily quotas.
-- **AI · your own key:** visitors map *their* files and pay for it themselves. The key is held in tab memory only and never stored or logged.
+- **Offline heuristic:** free and the default. It maps 9/9 fields on the sample.
+- **AI · your own key:** visitors paste *their own* Anthropic key to try AI-assisted mapping on any file, at their own cost.
+  The key stays in tab memory, is sent only as a request header, and is never stored, logged, or written to the audit trail.
 
+Demo mode **ignores `ANTHROPIC_API_KEY` even if it's set** (it logs a warning), so a key added to the hosting dashboard
+by mistake can't be billed. Rate limits and upload caps still protect the server.
 Details and tradeoffs: [ADR-0005](docs/adr/0005-public-demo-cost-controls.md).
 
 ### Vercel (recommended: no cold starts)
 
 1. Import the repo → set **Root Directory** to `apps/web` (framework: Next.js; pnpm is auto-detected).
-2. Environment variables: `FIELDKIT_DEMO_MODE=1`, `FIELDKIT_VISITOR_SALT=<random>`, and optionally
-   `ANTHROPIC_API_KEY` (see step 3). The full list is in [`.env.example`](.env.example).
-3. **Before adding a key:** create a dedicated workspace in the Anthropic Console, give it a low monthly
-   spend limit (for example $5) with an alert, and create the key *in that workspace*. This is the hard ceiling if everything else fails.
-4. Deploy. The audit log automatically uses `/tmp` on Vercel, which resets when instances recycle (the UI says so).
+2. Environment variables: `FIELDKIT_DEMO_MODE=1` and `FIELDKIT_VISITOR_SALT=<random>`. **Don't add `ANTHROPIC_API_KEY`.**
+3. Deploy. The audit log automatically uses `/tmp` on Vercel, which resets when instances recycle (the UI says so).
 
 ### Render / Fly / any container host
 

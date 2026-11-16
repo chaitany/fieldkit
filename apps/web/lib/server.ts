@@ -7,6 +7,9 @@ import type { SuggestResult } from "@fieldkit/core";
 import { SAMPLE_CSV } from "./sample.generated";
 
 export const config = loadConfig();
+if (config.hostedKeyIgnored) {
+  console.warn("[fieldkit] ANTHROPIC_API_KEY is set but ignored: demo mode is bring-your-own-key only. Remove it from this deployment.");
+}
 
 const DAY = 24 * 60 * 60 * 1000;
 

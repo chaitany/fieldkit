@@ -31,9 +31,9 @@ with a renamed column: "If the customer renames a column next month, the run ref
 instead of silently dropping data."
 
 **Bonus, if they ask "how do you stop someone burning your API key?" (30s)**
-Point at the engine picker: "Hosted AI is limited to the sample and cached, there are per-visitor and global quotas,
-and anyone who wants AI on their own data brings their own key, which is never stored. The real ceiling is a spend
-cap on a dedicated workspace. Defence in depth: each layer assumes the one before it failed." (ADR-0005)
+Point at the engine picker: "The public demo never uses my key. It's ignored even if someone sets it by mistake.
+Visitors either use the free offline engine or bring their own key, which stays in tab memory and is never stored or logged.
+If I ever do host a key, there's an opt-in mode with a sample-only restriction, a cache, quotas and a workspace spend cap." (ADR-0005)
 
 **3:45 – Close (15s)**
 "The same engine runs as a CLI inside the customer's VPC. The LLM proposes, the human approves, the

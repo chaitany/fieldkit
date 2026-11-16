@@ -13,7 +13,10 @@ import { createHash } from "node:crypto";
 
 export interface DemoConfig {
   demoMode: boolean;
+  /** Server-side key. Always undefined in demo mode unless FIELDKIT_ALLOW_HOSTED_AI=1. */
   hostedKey?: string;
+  /** True when a key is present in the environment but deliberately ignored (demo mode). */
+  hostedKeyIgnored: boolean;
   /** In demo mode, only spend the hosted key on the built-in sample dataset. */
   sampleOnly: boolean;
   perVisitorDaily: number;
@@ -27,9 +30,14 @@ const bool = (v: string | undefined, d: boolean) => (v === undefined ? d : /^(1|
 
 export function loadConfig(env: Record<string, string | undefined> = process.env): DemoConfig {
   const demoMode = bool(env.FIELDKIT_DEMO_MODE, false);
+  // Public demos never spend the owner's key by default: AI is bring-your-own-key only.
+  // A key set by mistake in the hosting dashboard is ignored, not used.
+  const allowHosted = !demoMode || bool(env.FIELDKIT_ALLOW_HOSTED_AI, false);
+  const envKey = env.ANTHROPIC_API_KEY || undefined;
   return {
     demoMode,
-    hostedKey: env.ANTHROPIC_API_KEY || undefined,
+    hostedKey: allowHosted ? envKey : undefined,
+    hostedKeyIgnored: Boolean(envKey) && !allowHosted,
     sampleOnly: bool(env.FIELDKIT_HOSTED_SAMPLE_ONLY, true),
     perVisitorDaily: int(env.FIELDKIT_AI_PER_VISITOR_DAILY, 5),
     globalDaily: int(env.FIELDKIT_AI_GLOBAL_DAILY, 100),
@@ -138,7 +146,7 @@ export interface DecideInput {
 export function decideEngine({ config, wantsLlm, byokKey, isSample }: DecideInput): EngineDecision {
   if (!wantsLlm) return { kind: "heuristic", reason: "Offline engine selected" };
   if (byokKey) return { kind: "byok", apiKey: byokKey };
-  if (!config.hostedKey) return { kind: "heuristic", reason: "No hosted AI key on this deployment. Add your own key to try AI mapping." };
+  if (!config.hostedKey) return { kind: "heuristic", reason: "AI mapping on this deployment uses your own key only. Add it to try AI mapping." };
   if (!config.demoMode) return { kind: "hosted", apiKey: config.hostedKey, metered: false };
   if (config.sampleOnly && !isSample) {
     return { kind: "heuristic", reason: "Hosted AI runs on the sample dataset only in this public demo. Use your own key for uploads." };

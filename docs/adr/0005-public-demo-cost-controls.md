@@ -1,6 +1,6 @@
 # ADR-0005: Cost controls for a public demo
 
-**Status:** Accepted
+**Status:** Accepted (amended: hosted AI is off by default in demo mode)
 
 ## Context
 A public link to an app that calls a paid LLM API is an open wallet. It gets shared, crawled, and
@@ -8,7 +8,17 @@ scripted. The demo must show AI mapping to anyone evaluating the project, with a
 bill measured in cents, not hundreds of dollars.
 
 ## Decision
-Defence in depth. Each layer works without the others:
+**The default public demo spends nothing.** With `FIELDKIT_DEMO_MODE=1`, the server ignores
+`ANTHROPIC_API_KEY` even if it's set (and warns at startup), so the owner's account can't be charged
+through the demo, including by a configuration mistake. Visitors choose between:
+
+- **Offline heuristic:** free, no network access.
+- **Bring your own key:** visitors who want to evaluate AI mapping pay for it themselves.
+
+Rate limits (per-minute on all POST routes) and the upload cap still protect compute.
+
+### Optional: hosted AI (`FIELDKIT_ALLOW_HOSTED_AI=1`)
+If the owner explicitly opts in, the hosted key is wrapped in defence in depth. Each layer works without the others:
 
 | # | Layer | Bounds |
 |---|---|---|

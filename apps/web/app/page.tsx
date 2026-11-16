@@ -130,8 +130,10 @@ export default function Workbench() {
 
       {deploy?.demoMode && (
         <div className="demo-banner">
-          <b>Public demo.</b> Files are processed in memory and never stored. Hosted AI is rate-limited
-          {deploy.hostedSampleOnly ? " and runs on the sample dataset only" : ""}; bring your own key to map your own files with AI.
+          <b>Public demo.</b> Files are processed in memory and never stored.{" "}
+          {deploy.hostedAi
+            ? <>Hosted AI is rate-limited{deploy.hostedSampleOnly ? " and runs on the sample dataset only" : ""}; bring your own key to map your own files with AI.</>
+            : <>The offline engine is free for everyone. To try AI-assisted mapping, use your own Anthropic API key.</>}
           {deploy.auditIsEphemeral ? " The audit trail resets when the server recycles." : ""}
         </div>
       )}
@@ -158,15 +160,18 @@ export default function Workbench() {
               <input type="radio" name="engine" checked={engine === "offline"} onChange={() => setEngine("offline")} />
               <b>Offline heuristic</b><span>Free, no network access. Works air-gapped.</span>
             </label>
-            <label className={engine === "hosted" ? "on" : ""} title={deploy?.hostedAi ? "" : "No hosted key on this deployment"}>
-              <input type="radio" name="engine" disabled={!deploy?.hostedAi} checked={engine === "hosted"} onChange={() => setEngine("hosted")} />
-              <b>AI · hosted demo key</b>
-              <span>
-                {!deploy?.hostedAi ? "Not configured on this deployment"
-                  : deploy.demoMode ? `${deploy.hostedSampleOnly ? "Sample only · " : ""}${deploy.remainingToday ?? 0}/${deploy.perVisitorDaily} runs left today (cached repeats are free)`
-                  : "Uses the server's key"}
-              </span>
-            </label>
+            {/* Only shown when the deployment deliberately provides a server key (local/private, or explicit opt-in). */}
+            {deploy?.hostedAi && (
+              <label className={engine === "hosted" ? "on" : ""}>
+                <input type="radio" name="engine" checked={engine === "hosted"} onChange={() => setEngine("hosted")} />
+                <b>AI · {deploy.demoMode ? "hosted demo key" : "server key"}</b>
+                <span>
+                  {deploy.demoMode
+                    ? `${deploy.hostedSampleOnly ? "Sample only · " : ""}${deploy.remainingToday ?? 0}/${deploy.perVisitorDaily} runs left today (cached repeats are free)`
+                    : "Uses this server's configured key"}
+                </span>
+              </label>
+            )}
             <label className={engine === "byok" ? "on" : ""}>
               <input type="radio" name="engine" checked={engine === "byok"} onChange={() => setEngine("byok")} />
               <b>AI · your own key</b><span>Any file. Billed to you. Never stored or logged.</span>
